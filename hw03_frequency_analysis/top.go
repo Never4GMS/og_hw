@@ -61,7 +61,7 @@ func createRating(counters map[string]uint16) []wordStat {
 }
 
 func top10(rating []wordStat) []string {
-	var limit int = 10
+	var limit = 10
 	if len(rating) < 10 {
 		limit = len(rating)
 	}
