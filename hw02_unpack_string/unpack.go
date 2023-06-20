@@ -62,6 +62,10 @@ func Unpack(input string) (string, error) {
 		}
 	}
 
+	if escaping {
+		return "", ErrInvalidString
+	}
+
 	if symbol != none {
 		sb.WriteRune(symbol)
 	}
