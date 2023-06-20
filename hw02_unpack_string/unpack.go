@@ -6,9 +6,11 @@ import (
 	"unicode"
 )
 
-const zero int = int(rune('0'))
-const escape rune = '\\'
-const none rune = 0
+const (
+	zero   int  = int(rune('0'))
+	escape rune = '\\'
+	none   rune = 0
+)
 
 var ErrInvalidString = errors.New("invalid string")
 
