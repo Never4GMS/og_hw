@@ -99,18 +99,18 @@ type ListItem struct {
 	Prev  *ListItem
 }
 
-func (i *ListItem) removeSelf() {
-	if i.Prev != nil {
-		i.Prev.Next = nil
+func (item *ListItem) removeSelf() {
+	if item.Prev != nil {
+		item.Prev.Next = nil
 	}
 
-	if i.Next != nil {
-		i.Next.Prev = nil
+	if item.Next != nil {
+		item.Next.Prev = nil
 	}
 
-	if i.Prev != nil && i.Next != nil {
-		i.Prev.Next = i.Next
-		i.Next.Prev = i.Prev
+	if item.Prev != nil && item.Next != nil {
+		item.Prev.Next = item.Next
+		item.Next.Prev = item.Prev
 	}
 }
 
