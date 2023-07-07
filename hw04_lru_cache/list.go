@@ -71,7 +71,7 @@ func (l *list) Remove(i *ListItem) {
 		l.back = i.Prev
 	}
 
-	i.removeSelf()
+	i.unlink()
 	l.count--
 }
 
@@ -88,7 +88,7 @@ func (l *list) MoveToFront(i *ListItem) {
 		l.back = i.Prev
 	}
 
-	i.removeSelf()
+	i.unlink()
 	i.addBetween(nil, l.front)
 	l.front = i
 }
@@ -99,7 +99,7 @@ type ListItem struct {
 	Prev  *ListItem
 }
 
-func (item *ListItem) removeSelf() {
+func (item *ListItem) unlink() {
 	if item.Prev != nil {
 		item.Prev.Next = nil
 	}
