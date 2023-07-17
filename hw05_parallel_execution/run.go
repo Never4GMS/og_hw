@@ -10,26 +10,15 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
-func Run(tasks []Task, n, m int) (err error) {
+func Run(tasks []Task, n, m int) error {
 	taskChan := make(chan Task)
 	wg := sync.WaitGroup{}
 	mMutex := sync.Mutex{}
-	errorLimitExceeded := func() bool {
-		return false
-	}
+	checkErrors := m > 0
+	errorLimitExceeded := notCheckingErrors
 
-	if m > 0 {
-		errorLimitExceeded = func() (exceeded bool) {
-			mMutex.Lock()
-			exceeded = m <= 0
-			mMutex.Unlock()
-
-			if exceeded {
-				err = ErrErrorsLimitExceeded
-			}
-
-			return
-		}
+	if checkErrors {
+		errorLimitExceeded = createErrorLimitExceeded(&m, &mMutex)
 	}
 
 	wg.Add(n + 1)
@@ -60,5 +49,22 @@ func Run(tasks []Task, n, m int) (err error) {
 
 	wg.Wait()
 
-	return
+	if checkErrors && m <= 0 {
+		return ErrErrorsLimitExceeded
+	}
+
+	return nil
+}
+
+func createErrorLimitExceeded(m *int, mMutex *sync.Mutex) func() bool {
+	return func() (exceeded bool) {
+		mMutex.Lock()
+		exceeded = *m <= 0
+		mMutex.Unlock()
+		return exceeded
+	}
+}
+
+func notCheckingErrors() bool {
+	return false
 }
