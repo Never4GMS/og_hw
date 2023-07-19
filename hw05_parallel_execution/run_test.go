@@ -53,17 +53,15 @@ func TestRun(t *testing.T) {
 
 		workersCount := 5
 		maxErrorsCount := 1
-		var err error
 
 		go func() {
-			err = Run(tasks, workersCount, maxErrorsCount)
+			err := Run(tasks, workersCount, maxErrorsCount)
+			require.NoError(t, err)
 		}()
 
 		require.Eventually(t, func() bool {
-			return runTasksCount == int32(tasksCount)
+			return atomic.LoadInt32(&runTasksCount) == int32(tasksCount)
 		}, time.Second, time.Millisecond, "not all tasks were completed")
-
-		require.NoError(t, err)
 	})
 
 	t.Run("ignore errors", func(t *testing.T) {
