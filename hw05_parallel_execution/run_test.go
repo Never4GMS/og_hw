@@ -73,7 +73,7 @@ func TestRun(t *testing.T) {
 
 		for i := 0; i < tasksCount; i++ {
 			taskSleep := time.Millisecond * time.Duration(rand.Intn(100))
-			var err error = nil
+			var err error
 			if i < errorsCount {
 				err = fmt.Errorf("error in %v", i)
 			}
