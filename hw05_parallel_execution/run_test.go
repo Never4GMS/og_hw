@@ -53,7 +53,7 @@ func TestRun(t *testing.T) {
 
 		workersCount := 5
 		maxErrorsCount := 1
-		var err error = nil
+		var err error
 
 		go func() {
 			err = Run(tasks, workersCount, maxErrorsCount)
