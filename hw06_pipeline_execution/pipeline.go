@@ -12,13 +12,6 @@ type (
 
 type Stage func(in In) (out Out)
 
-func max(a int, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	if in == nil {
 		temp := make(chan interface{})
@@ -43,6 +36,13 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	go scheduleRunners(done, in, inputs, outputs, pipeCompleted, runners)
 
 	return merge(done, pipeCompleted)
+}
+
+func max(a int, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func createRunner(in In, stages []Stage) In {
