@@ -11,45 +11,22 @@ type (
 type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	if in == nil {
-		b := make(Bi)
-		in = b
-		close(b)
+	if in == nil || len(stages) == 0 {
+		output := make(Bi)
+		close(output)
+		return output
 	}
 
-	if len(stages) == 0 {
-		return in
-	}
-
-	input := wrapWithDone(done, in)
+	input := in
 	for _, stage := range stages {
-		input = wrapWithDone(done, merge(done, stage(input), stage(input)))
+		input = merge(done,
+			stage(input),
+			stage(input),
+			stage(input),
+		)
 	}
 
 	return input
-}
-
-func wrapWithDone(done In, in In) In {
-	bi := make(Bi)
-	go func() {
-		defer close(bi)
-		for {
-			select {
-			case <-done:
-				return
-			case val, ok := <-in:
-				if !ok {
-					return
-				}
-				select {
-				case <-done:
-					return
-				case bi <- val:
-				}
-			}
-		}
-	}()
-	return bi
 }
 
 func merge(done In, outputs ...In) In {
@@ -57,11 +34,19 @@ func merge(done In, outputs ...In) In {
 	out := make(Bi)
 	multiplex := func(c In) {
 		defer wg.Done()
-		for i := range c {
+		for {
 			select {
 			case <-done:
 				return
-			case out <- i:
+			case val, ok := <-c:
+				if !ok {
+					return
+				}
+				select {
+				case <-done:
+					return
+				case out <- val:
+				}
 			}
 		}
 	}
