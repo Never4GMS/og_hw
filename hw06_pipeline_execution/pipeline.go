@@ -1,8 +1,6 @@
 package hw06pipelineexecution
 
-import (
-	"runtime"
-)
+import "sync"
 
 type (
 	In  = <-chan interface{}
@@ -14,93 +12,59 @@ type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	if in == nil {
-		temp := make(chan interface{})
-		in = temp
-		close(temp)
+		b := make(Bi)
+		in = b
+		close(b)
 	}
 
 	if len(stages) == 0 {
 		return in
 	}
 
-	runners := max(runtime.NumCPU(), 5)
-	inputs := make([]Bi, runners)
-	outputs := make([]In, runners)
-	pipeCompleted := make(chan In, runners)
-
-	for i := 0; i < runners; i++ {
-		inputs[i] = make(Bi)
-		outputs[i] = createRunner(inputs[i], stages)
-	}
-
-	go scheduleRunners(done, in, inputs, outputs, pipeCompleted, runners)
-
-	return merge(done, pipeCompleted)
-}
-
-func max(a int, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func createRunner(in In, stages []Stage) In {
+	input := wrapWithDone(done, in)
 	for _, stage := range stages {
-		in = stage(in)
+		input = wrapWithDone(done, merge(done, stage(input), stage(input)))
 	}
-	return in
+
+	return input
 }
 
-func scheduleRunners(done In, in In, inputs []Bi, outputs []In, pipeCompleted chan<- In, runners int) {
-	defer closeAll(inputs)
-	defer close(pipeCompleted)
-	roundRobbin := 0
-	for {
-		select {
-		case <-done:
-			return
-		case i, ok := <-in:
-			if !ok {
-				return
-			}
-			inputs[roundRobbin] <- i
-			pipeCompleted <- outputs[roundRobbin]
-			roundRobbin = (roundRobbin + 1) % runners
-		}
-	}
-}
-
-func closeAll(inputs []Bi) {
-	for _, input := range inputs {
-		close(input)
-	}
-}
-
-func merge(done In, pipeCompleted <-chan In) In {
-	out := make(Bi)
+func wrapWithDone(done In, in In) In {
+	bi := make(Bi)
 	go func() {
-		defer close(out)
-		for {
+		defer close(bi)
+		for val := range in {
+			select {
+			case <-done:
+			case bi <- val:
+			}
+		}
+	}()
+	return bi
+}
+
+func merge(done In, outputs ...In) In {
+	var wg sync.WaitGroup
+	out := make(Bi)
+	multiplex := func(c In) {
+		defer wg.Done()
+		for i := range c {
 			select {
 			case <-done:
 				return
-			case pipe, ok := <-pipeCompleted:
-				if !ok {
-					return
-				}
-
-				select {
-				case <-done:
-					return
-				case v, ok := <-pipe:
-					if !ok {
-						return
-					}
-					out <- v
-				}
+			case out <- i:
 			}
 		}
+	}
+
+	wg.Add(len(outputs))
+	for _, c := range outputs {
+		go multiplex(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
 	}()
 
 	return out
