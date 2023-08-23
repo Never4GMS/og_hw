@@ -33,10 +33,19 @@ func wrapWithDone(done In, in In) In {
 	bi := make(Bi)
 	go func() {
 		defer close(bi)
-		for val := range in {
+		for {
 			select {
 			case <-done:
-			case bi <- val:
+				return
+			case val, ok := <-in:
+				if !ok {
+					return
+				}
+				select {
+				case <-done:
+					return
+				case bi <- val:
+				}
 			}
 		}
 	}()
