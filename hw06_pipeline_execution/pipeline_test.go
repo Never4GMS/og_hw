@@ -1,7 +1,6 @@
 package hw06pipelineexecution
 
 import (
-	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -55,7 +54,6 @@ func TestPipeline(t *testing.T) {
 		}
 		elapsed := time.Since(start)
 
-		sort.Strings(result)
 		require.Equal(t, []string{"102", "104", "106", "108", "110"}, result)
 		require.Less(t,
 			int64(elapsed),
