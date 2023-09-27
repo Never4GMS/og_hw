@@ -19,6 +19,7 @@ func TestCopy(t *testing.T) {
 		os.Remove(n)
 	}
 	compareWith := func(t *testing.T, expectedPath, actualPath string) {
+		t.Helper()
 		expected, err := os.ReadFile(expectedPath)
 		if err != nil {
 			t.Error(err.Error())
