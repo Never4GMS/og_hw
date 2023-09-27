@@ -49,7 +49,7 @@ func main() {
 
 	bar := progressbar.DefaultBytes(limit, "copying...")
 	defer bar.Finish()
-	if err := Copy2(io.MultiWriter(dst, bar), src, offset, limit); err != nil {
+	if err := Copy(io.MultiWriter(dst, bar), src, offset, limit); err != nil {
 		fmt.Printf("failed to copy: %v", err)
 	}
 }

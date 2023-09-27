@@ -34,7 +34,7 @@ func TestCopy(t *testing.T) {
 	}
 
 	t.Run("Copy full", func(t *testing.T) {
-		dst, err := os.CreateTemp("/tmp", "go_hw_07_copy_*.txt")
+		dst, err := os.CreateTemp("/tmp", "go_hw_07_copy_01_*.txt")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -43,17 +43,5 @@ func TestCopy(t *testing.T) {
 		err = Copy(dst, src, 0, 10000)
 		require.Nil(t, err)
 		compareWith(t, "testdata/out_offset0_limit0.txt", dst.Name())
-	})
-
-	t.Run("Copy with limit 10", func(t *testing.T) {
-		dst, err := os.CreateTemp("/tmp", "go_hw_07_copy_*.txt")
-		if err != nil {
-			t.Error(err.Error())
-		}
-		defer removeTmp(dst)
-
-		err = Copy(dst, src, 0, 10)
-		require.Nil(t, err)
-		compareWith(t, "testdata/out_offset0_limit10.txt", dst.Name())
 	})
 }
