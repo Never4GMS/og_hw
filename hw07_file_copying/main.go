@@ -2,6 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 var (
@@ -18,5 +23,33 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// Place your code here.
+	src, err := os.OpenFile(from, os.O_RDONLY, 0o444)
+	if err != nil {
+		fmt.Printf("copy: can't open from file: %v", err.Error())
+		return
+	}
+	defer src.Close()
+
+	dst, err := os.Create(to)
+	if err != nil {
+		fmt.Printf("copy: can't create to file: %v", err.Error())
+		return
+	}
+	defer dst.Close()
+
+	s, err := src.Stat()
+	if err != nil {
+		fmt.Printf("copy: can't get from file info: %v", err.Error())
+		return
+	}
+
+	if limit == 0 || (offset+limit) > s.Size() {
+		limit = s.Size() - offset
+	}
+
+	bar := progressbar.DefaultBytes(limit, "copying...")
+	defer bar.Finish()
+	if err := Copy2(io.MultiWriter(dst, bar), src, offset, limit); err != nil {
+		fmt.Printf("failed to copy: %v", err)
+	}
 }
