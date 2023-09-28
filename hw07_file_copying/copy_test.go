@@ -40,7 +40,7 @@ func TestCopy(t *testing.T) {
 		}
 		defer removeTmp(dst)
 
-		err = Copy(dst, src, 0, 10000)
+		err = copyFromReaderToWriter(dst, src, 0, 10000)
 		require.Nil(t, err)
 		compareWith(t, "testdata/out_offset0_limit0.txt", dst.Name())
 	})
